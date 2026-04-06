@@ -1,4 +1,4 @@
-# AGENT.md
+# AGENTS.md
 
 ## Working rules
 - Use Plan first for non-trivial tasks.
