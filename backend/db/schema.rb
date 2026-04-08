@@ -10,8 +10,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_030757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "categories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_categories_on_name", unique: true
+  end
+
+  create_table "spots", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "note"
+    t.string "status", default: "want_to_go", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.date "visited_on"
+    t.index ["category_id"], name: "index_spots_on_category_id"
+    t.index ["status"], name: "index_spots_on_status"
+    t.check_constraint "status::text = ANY (ARRAY['want_to_go'::character varying, 'visited'::character varying]::text[])", name: "spots_status_check"
+  end
+
+  add_foreign_key "spots", "categories"
 end

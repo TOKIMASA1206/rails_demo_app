@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  category: one
+  name: Morning Cafe
+  note: Quiet place for breakfast
+  url: https://example.com/cafe
+  status: want_to_go
+  visited_on: 2026-04-08
+
+two:
+  category: two
+  name: Weekend Bookstore
+  note: Nice indie bookstore
+  url: https://example.com/bookstore
+  status: visited
+  visited_on: 2026-04-08
