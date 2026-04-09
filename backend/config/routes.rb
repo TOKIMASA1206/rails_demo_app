@@ -4,6 +4,6 @@ Rails.application.routes.draw do
 
   namespace :api do
     resources :categories, only: [:create]
-    resources :spots, only: [:create]
+    resources :spots, only: [:index, :create, :show]
   end
 end
