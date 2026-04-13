@@ -1,6 +1,17 @@
 require "test_helper"
 
 class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
+  test "lists spots" do
+    get "/api/spots"
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal 2, response_json.length
+    assert_equal [spots(:one).id, spots(:two).id].sort, response_json.map { |spot| spot["id"] }.sort
+  end
+
   test "creates a spot" do
     assert_difference("Spot.count", 1) do
       post "/api/spots",
@@ -24,6 +35,28 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Local Sento", response_json["name"]
     assert_equal "want_to_go", response_json["status"]
     assert_equal categories(:one).id, response_json["category_id"]
+  end
+
+  test "shows a spot" do
+    get "/api/spots/#{spots(:one).id}"
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal spots(:one).id, response_json["id"]
+    assert_equal spots(:one).name, response_json["name"]
+    assert_equal spots(:one).status, response_json["status"]
+  end
+
+  test "returns not found when spot does not exist" do
+    get "/api/spots/999999"
+
+    assert_response :not_found
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal ["Spot not found"], response_json["errors"]
   end
 
   test "returns errors when spot is invalid" do
