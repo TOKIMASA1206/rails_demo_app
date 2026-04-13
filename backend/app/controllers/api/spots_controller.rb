@@ -25,6 +25,28 @@ module Api
       end
     end
 
+    def update
+      spot = Spot.find_by(id: params[:id])
+
+      if spot.nil?
+        render json: { errors: ["Spot not found"] }, status: :not_found
+      elsif spot.update(spot_params)
+        render json: spot, status: :ok
+      else
+        render json: { errors: spot.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
+
+    def destroy
+      spot = Spot.find_by(id: params[:id])
+      if spot.nil?
+        render json: { errors: ["Spot not found"] }, status: :not_found
+      else
+        spot.destroy
+        head :no_content
+      end
+    end
+
     private
 
     def spot_params
