@@ -59,6 +59,62 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal ["Spot not found"], response_json["errors"]
   end
 
+  test "updates a spot" do
+    patch "/api/spots/#{spots(:one).id}",
+      params: {
+        spot: {
+          name: "Updated Cafe",
+          status: "visited"
+        }
+      },
+      as: :json
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal "Updated Cafe", response_json["name"]
+    assert_equal "visited", response_json["status"]
+    assert_equal "Updated Cafe", spots(:one).reload.name
+    assert_equal "visited", spots(:one).reload.status
+  end
+
+  test "returns not found when updating a non-existent spot" do
+    patch "/api/spots/999999",
+      params: {
+        spot: {
+          name: "Updated Cafe"
+        }
+      },
+      as: :json
+
+    assert_response :not_found
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal ["Spot not found"], response_json["errors"]
+  end
+
+  test "destroys a spot" do
+    assert_difference("Spot.count", -1) do
+      delete "/api/spots/#{spots(:one).id}"
+    end
+
+    assert_response :no_content
+  end
+
+  test "returns not found when deleting a non-existent spot" do
+    assert_no_difference("Spot.count") do
+      delete "/api/spots/999999"
+    end
+
+    assert_response :not_found
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal ["Spot not found"], response_json["errors"]
+  end
+
   test "returns errors when spot is invalid" do
     assert_no_difference("Spot.count") do
       post "/api/spots",

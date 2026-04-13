@@ -16,16 +16,43 @@ module Api
     end
 
     def show
-      spot = Spot.find_by(id: params[:id])
+      find_spot
 
-      if spot
-        render json: spot, status: :ok
+      if @spot
+        render json: @spot, status: :ok
       else
         render json: { errors: ["Spot not found"] }, status: :not_found
       end
     end
 
+    def update
+      find_spot
+
+      if @spot.nil?
+        render json: { errors: ["Spot not found"] }, status: :not_found
+      elsif @spot.update(spot_params)
+        render json: @spot, status: :ok
+      else
+        render json: { errors: @spot.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
+
+    def destroy
+      find_spot
+
+      if @spot.nil?
+        render json: { errors: ["Spot not found"] }, status: :not_found
+      else
+        @spot.destroy
+        head :no_content
+      end
+    end
+
     private
+
+    def find_spot
+      @spot = Spot.find_by(id: params[:id])
+    end
 
     def spot_params
       params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on)
