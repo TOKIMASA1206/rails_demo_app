@@ -12,6 +12,27 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [spots(:one).id, spots(:two).id].sort, response_json.map { |spot| spot["id"] }.sort
   end
 
+  test "filters spots by category_id" do
+    get "/api/spots", params: { category_id: categories(:one).id }
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal 1, response_json.length
+    assert_equal [spots(:one).id], response_json.map { |spot| spot["id"] }
+  end
+
+  test "returns an empty array when no spots match the category filter" do
+    get "/api/spots", params: { category_id: 999999 }
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [], response_json
+  end
+
   test "creates a spot" do
     assert_difference("Spot.count", 1) do
       post "/api/spots",

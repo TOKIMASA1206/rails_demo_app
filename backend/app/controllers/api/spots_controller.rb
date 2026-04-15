@@ -1,8 +1,9 @@
 module Api
   class SpotsController < ApplicationController
+    before_action :find_spot, only: [:show, :update, :destroy]
+
     def index
-      spots = Spot.all
-      render json: spots, status: :ok
+      render json: spots_for_index, status: :ok
     end
 
     def create
@@ -16,8 +17,6 @@ module Api
     end
 
     def show
-      find_spot
-
       if @spot
         render json: @spot, status: :ok
       else
@@ -26,8 +25,6 @@ module Api
     end
 
     def update
-      find_spot
-
       if @spot.nil?
         render json: { errors: ["Spot not found"] }, status: :not_found
       elsif @spot.update(spot_params)
@@ -38,8 +35,6 @@ module Api
     end
 
     def destroy
-      find_spot
-
       if @spot.nil?
         render json: { errors: ["Spot not found"] }, status: :not_found
       else
@@ -49,6 +44,13 @@ module Api
     end
 
     private
+
+    def spots_for_index
+      spots = Spot.all
+      return spots unless params[:category_id].present?
+
+      spots.where(category_id: params[:category_id])
+    end
 
     def find_spot
       @spot = Spot.find_by(id: params[:id])
