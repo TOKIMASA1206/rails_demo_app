@@ -9,7 +9,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_equal 2, response_json.length
-    assert_equal [spots(:one).id, spots(:two).id].sort, response_json.map { |spot| spot["id"] }.sort
+    assert_equal [ spots(:one).id, spots(:two).id ].sort, response_json.map { |spot| spot["id"] }.sort
   end
 
   test "filters spots by category_id" do
@@ -20,7 +20,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_equal 1, response_json.length
-    assert_equal [spots(:one).id], response_json.map { |spot| spot["id"] }
+    assert_equal [ spots(:one).id ], response_json.map { |spot| spot["id"] }
   end
 
   test "returns an empty array when no spots match the category filter" do
@@ -77,7 +77,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     response_json = JSON.parse(response.body)
 
-    assert_equal ["Spot not found"], response_json["errors"]
+    assert_equal [ "Spot not found" ], response_json["errors"]
   end
 
   test "updates a spot" do
@@ -113,7 +113,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     response_json = JSON.parse(response.body)
 
-    assert_equal ["Spot not found"], response_json["errors"]
+    assert_equal [ "Spot not found" ], response_json["errors"]
   end
 
   test "destroys a spot" do
@@ -133,7 +133,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     response_json = JSON.parse(response.body)
 
-    assert_equal ["Spot not found"], response_json["errors"]
+    assert_equal [ "Spot not found" ], response_json["errors"]
   end
 
   test "returns errors when spot is invalid" do
