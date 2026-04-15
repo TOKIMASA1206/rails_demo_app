@@ -1,8 +1,7 @@
 module Api
   class SpotsController < ApplicationController
     def index
-      spots = Spot.all
-      render json: spots, status: :ok
+      render json: spots_for_index, status: :ok
     end
 
     def create
@@ -49,6 +48,13 @@ module Api
     end
 
     private
+
+    def spots_for_index
+      spots = Spot.all
+      return spots unless params[:category_id].present?
+
+      spots.where(category_id: params[:category_id])
+    end
 
     def find_spot
       @spot = Spot.find_by(id: params[:id])
