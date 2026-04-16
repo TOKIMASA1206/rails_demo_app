@@ -1,6 +1,18 @@
 require "test_helper"
 
 class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
+  SPOT_RESPONSE_KEYS = %w[
+    id
+    category_id
+    name
+    note
+    url
+    status
+    visited_on
+    created_at
+    updated_at
+  ].freeze
+
   test "lists spots" do
     get "/api/spots"
 
@@ -10,6 +22,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 2, response_json.length
     assert_equal [ spots(:one).id, spots(:two).id ].sort, response_json.map { |spot| spot["id"] }.sort
+    assert_equal SPOT_RESPONSE_KEYS.sort, response_json.first.keys.sort
   end
 
   test "filters spots by category_id" do
@@ -21,6 +34,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 1, response_json.length
     assert_equal [ spots(:one).id ], response_json.map { |spot| spot["id"] }
+    assert_equal SPOT_RESPONSE_KEYS.sort, response_json.first.keys.sort
   end
 
   test "returns an empty array when no spots match the category filter" do
@@ -52,6 +66,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_equal [ spot_a.id, spots(:one).id, spots(:two).id, spot_c.id ], response_json.map { |spot| spot["id"] }
+    assert_equal SPOT_RESPONSE_KEYS.sort, response_json.first.keys.sort
   end
 
   test "sorts spots by created_at in descending order" do
@@ -112,6 +127,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Local Sento", response_json["name"]
     assert_equal "want_to_go", response_json["status"]
     assert_equal categories(:one).id, response_json["category_id"]
+    assert_equal SPOT_RESPONSE_KEYS.sort, response_json.keys.sort
   end
 
   test "shows a spot" do
@@ -124,6 +140,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal spots(:one).id, response_json["id"]
     assert_equal spots(:one).name, response_json["name"]
     assert_equal spots(:one).status, response_json["status"]
+    assert_equal SPOT_RESPONSE_KEYS.sort, response_json.keys.sort
   end
 
   test "returns not found when spot does not exist" do
@@ -152,6 +169,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "Updated Cafe", response_json["name"]
     assert_equal "visited", response_json["status"]
+    assert_equal SPOT_RESPONSE_KEYS.sort, response_json.keys.sort
     assert_equal "Updated Cafe", spots(:one).reload.name
     assert_equal "visited", spots(:one).reload.status
   end

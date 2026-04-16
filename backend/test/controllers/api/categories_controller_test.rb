@@ -1,6 +1,13 @@
 require "test_helper"
 
 class Api::CategoriesControllerTest < ActionDispatch::IntegrationTest
+  CATEGORY_RESPONSE_KEYS = %w[
+    id
+    name
+    created_at
+    updated_at
+  ].freeze
+
   test "lists categories" do
     get "/api/categories"
 
@@ -10,6 +17,7 @@ class Api::CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 2, response_json.length
     assert_equal [ categories(:one).id, categories(:two).id ].sort, response_json.map { |category| category["id"] }.sort
+    assert_equal CATEGORY_RESPONSE_KEYS.sort, response_json.first.keys.sort
   end
 
   test "creates a category" do
@@ -24,6 +32,7 @@ class Api::CategoriesControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_equal "Ramen", response_json["name"]
+    assert_equal CATEGORY_RESPONSE_KEYS.sort, response_json.keys.sort
   end
 
   test "returns errors when category is invalid" do
@@ -64,6 +73,7 @@ class Api::CategoriesControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_equal "Coffee Shop", response_json["name"]
+    assert_equal CATEGORY_RESPONSE_KEYS.sort, response_json.keys.sort
     assert_equal "Coffee Shop", categories(:one).reload.name
   end
 

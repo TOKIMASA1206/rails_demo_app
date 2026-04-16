@@ -4,14 +4,14 @@ module Api
     before_action :find_spot, only: [ :show, :update, :destroy ]
 
     def index
-      render json: spots_for_index, status: :ok
+      render json: spots_for_index.map { |spot| spot_response(spot) }, status: :ok
     end
 
     def create
       spot = Spot.new(spot_params)
 
       if spot.save
-        render json: spot, status: :created
+        render json: spot_response(spot), status: :created
       else
         render json: { errors: spot.errors.full_messages }, status: :unprocessable_entity
       end
@@ -19,7 +19,7 @@ module Api
 
     def show
       if @spot
-        render json: @spot, status: :ok
+        render json: spot_response(@spot), status: :ok
       else
         render json: { errors: [ "Spot not found" ] }, status: :not_found
       end
@@ -29,7 +29,7 @@ module Api
       if @spot.nil?
         render json: { errors: [ "Spot not found" ] }, status: :not_found
       elsif @spot.update(spot_params)
-        render json: @spot, status: :ok
+        render json: spot_response(@spot), status: :ok
       else
         render json: { errors: @spot.errors.full_messages }, status: :unprocessable_entity
       end
@@ -67,6 +67,20 @@ module Api
 
     def spot_params
       params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on)
+    end
+
+    def spot_response(spot)
+      spot.as_json(only: %i[
+        id
+        category_id
+        name
+        note
+        url
+        status
+        visited_on
+        created_at
+        updated_at
+      ])
     end
   end
 end
