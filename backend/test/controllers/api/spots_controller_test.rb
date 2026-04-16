@@ -33,6 +33,62 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], response_json
   end
 
+  test "sorts spots by name in ascending order" do
+    spot_c = Spot.create!(
+      category: categories(:one),
+      name: "Zebra Cafe",
+      status: "want_to_go"
+    )
+    spot_a = Spot.create!(
+      category: categories(:one),
+      name: "Apple Cafe",
+      status: "want_to_go"
+    )
+
+    get "/api/spots", params: { sort: "name_asc" }
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [ spot_a.id, spots(:one).id, spots(:two).id, spot_c.id ], response_json.map { |spot| spot["id"] }
+  end
+
+  test "sorts spots by created_at in descending order" do
+    older_spot = Spot.create!(
+      category: categories(:one),
+      name: "Older Cafe",
+      status: "want_to_go",
+      created_at: 2.days.ago,
+      updated_at: 2.days.ago
+    )
+    newer_spot = Spot.create!(
+      category: categories(:one),
+      name: "Newer Cafe",
+      status: "want_to_go",
+      created_at: 1.hour.ago,
+      updated_at: 1.hour.ago
+    )
+
+    get "/api/spots", params: { sort: "created_at_desc" }
+
+    assert_response :ok
+
+    response_json = JSON.parse(response.body)
+
+    assert_operator response_json.map { |spot| spot["id"] }.index(newer_spot.id), :<, response_json.map { |spot| spot["id"] }.index(older_spot.id)
+  end
+
+  test "returns bad request when sort parameter is invalid" do
+    get "/api/spots", params: { sort: "name_desc" }
+
+    assert_response :bad_request
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [ "Invalid sort parameter" ], response_json["errors"]
+  end
+
   test "creates a spot" do
     assert_difference("Spot.count", 1) do
       post "/api/spots",
