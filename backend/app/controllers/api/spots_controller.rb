@@ -1,5 +1,6 @@
 module Api
   class SpotsController < ApplicationController
+    before_action :validate_sort_param, only: [ :index ]
     before_action :find_spot, only: [ :show, :update, :destroy ]
 
     def index
@@ -47,13 +48,21 @@ module Api
 
     def spots_for_index
       spots = Spot.all
-      return spots unless params[:category_id].present?
+      spots = spots.where(category_id: params[:category_id]) if params[:category_id].present?
 
-      spots.where(category_id: params[:category_id])
+      sort_order = Spot.sort_order_for(params[:sort])
+      sort_order ? spots.order(sort_order) : spots
     end
 
     def find_spot
       @spot = Spot.find_by(id: params[:id])
+    end
+
+    def validate_sort_param
+      return unless params[:sort].present?
+      return if Spot.sort_order_for(params[:sort])
+
+      render json: { errors: [ "Invalid sort parameter" ] }, status: :bad_request
     end
 
     def spot_params
