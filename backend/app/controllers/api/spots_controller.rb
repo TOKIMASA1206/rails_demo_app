@@ -2,13 +2,14 @@ module Api
   class SpotsController < ApplicationController
     before_action :validate_sort_param, only: [ :index ]
     before_action :find_spot, only: [ :show, :update, :destroy ]
+    before_action :authenticate_user!, only: [ :create ]
 
     def index
       render json: spots_for_index.map { |spot| spot_response(spot) }, status: :ok
     end
 
     def create
-      spot = Spot.new(spot_params)
+      spot = Spot.new(spot_params.merge(user: current_user))
 
       if spot.save
         render json: spot_response(spot), status: :created
@@ -66,7 +67,7 @@ module Api
     end
 
     def spot_params
-      params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on, :user_id)
+      params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on)
     end
 
     def spot_response(spot)
