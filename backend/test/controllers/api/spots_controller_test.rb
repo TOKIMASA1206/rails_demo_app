@@ -169,6 +169,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
           status: "visited"
         }
       },
+      headers: auth_headers(users(:one)),
       as: :json
 
     assert_response :ok
@@ -183,6 +184,45 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "visited", spots(:one).reload.status
   end
 
+  test "returns unauthorized when updating without authentication" do
+    original_name = spots(:one).name
+
+    patch "/api/spots/#{spots(:one).id}",
+      params: {
+        spot: {
+          name: "Updated Cafe"
+        }
+      },
+      as: :json
+
+    assert_response :unauthorized
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [ "Unauthorized" ], response_json["errors"]
+    assert_equal original_name, spots(:one).reload.name
+  end
+
+  test "returns forbidden when updating another user's spot" do
+    original_name = spots(:two).name
+
+    patch "/api/spots/#{spots(:two).id}",
+      params: {
+        spot: {
+          name: "Hijacked Spot"
+        }
+      },
+      headers: auth_headers(users(:one)),
+      as: :json
+
+    assert_response :forbidden
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [ "Forbidden" ], response_json["errors"]
+    assert_equal original_name, spots(:two).reload.name
+  end
+
   test "returns not found when updating a non-existent spot" do
     patch "/api/spots/999999",
       params: {
@@ -190,6 +230,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
           name: "Updated Cafe"
         }
       },
+      headers: auth_headers(users(:one)),
       as: :json
 
     assert_response :not_found
@@ -201,15 +242,42 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
   test "destroys a spot" do
     assert_difference("Spot.count", -1) do
-      delete "/api/spots/#{spots(:one).id}"
+      delete "/api/spots/#{spots(:one).id}",
+        headers: auth_headers(users(:one))
     end
 
     assert_response :no_content
   end
 
+  test "returns unauthorized when deleting without authentication" do
+    assert_no_difference("Spot.count") do
+      delete "/api/spots/#{spots(:one).id}"
+    end
+
+    assert_response :unauthorized
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [ "Unauthorized" ], response_json["errors"]
+  end
+
+  test "returns forbidden when deleting another user's spot" do
+    assert_no_difference("Spot.count") do
+      delete "/api/spots/#{spots(:two).id}",
+        headers: auth_headers(users(:one))
+    end
+
+    assert_response :forbidden
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal [ "Forbidden" ], response_json["errors"]
+  end
+
   test "returns not found when deleting a non-existent spot" do
     assert_no_difference("Spot.count") do
-      delete "/api/spots/999999"
+      delete "/api/spots/999999",
+        headers: auth_headers(users(:one))
     end
 
     assert_response :not_found

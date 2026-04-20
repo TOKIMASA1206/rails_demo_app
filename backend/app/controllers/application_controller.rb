@@ -11,6 +11,14 @@ class ApplicationController < ActionController::API
   def authenticate_user!
     return if current_user
 
+    render_unauthorized
+  end
+
+  def render_unauthorized
     render json: { errors: [ "Unauthorized" ] }, status: :unauthorized
+  end
+
+  def render_forbidden
+    render json: { errors: [ "Forbidden" ] }, status: :forbidden
   end
 end
