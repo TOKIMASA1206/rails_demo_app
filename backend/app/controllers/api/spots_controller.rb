@@ -15,7 +15,7 @@ module Api
       if spot.save
         render json: spot_response(spot), status: :created
       else
-        render json: { errors: spot.errors.full_messages }, status: :unprocessable_entity
+        render_unprocessable_entity(spot.errors.full_messages)
       end
     end
 
@@ -23,23 +23,23 @@ module Api
       if @spot
         render json: spot_response(@spot), status: :ok
       else
-        render json: { errors: [ "Spot not found" ] }, status: :not_found
+        render_not_found("Spot not found")
       end
     end
 
     def update
       if @spot.nil?
-        render json: { errors: [ "Spot not found" ] }, status: :not_found
+        render_not_found("Spot not found")
       elsif @spot.update(spot_params)
         render json: spot_response(@spot), status: :ok
       else
-        render json: { errors: @spot.errors.full_messages }, status: :unprocessable_entity
+        render_unprocessable_entity(@spot.errors.full_messages)
       end
     end
 
     def destroy
       if @spot.nil?
-        render json: { errors: [ "Spot not found" ] }, status: :not_found
+        render_not_found("Spot not found")
       else
         @spot.destroy
         head :no_content
@@ -71,7 +71,7 @@ module Api
       return unless params[:sort].present?
       return if Spot.sort_order_for(params[:sort])
 
-      render json: { errors: [ "Invalid sort parameter" ] }, status: :bad_request
+      render_bad_request("Invalid sort parameter")
     end
 
     def spot_params

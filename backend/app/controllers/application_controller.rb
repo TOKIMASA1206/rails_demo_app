@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::API
   private
 
+  # Authentication helpers
   def current_user
     return @current_user if defined?(@current_user)
 
@@ -14,11 +15,28 @@ class ApplicationController < ActionController::API
     render_unauthorized
   end
 
+  # Shared JSON error responses
+  def render_bad_request(message)
+    render_error(message, :bad_request)
+  end
+
+  def render_not_found(message)
+    render_error(message, :not_found)
+  end
+
+  def render_unprocessable_entity(errors)
+    render json: { errors: Array(errors) }, status: :unprocessable_entity
+  end
+
   def render_unauthorized
-    render json: { errors: [ "Unauthorized" ] }, status: :unauthorized
+    render_error("Unauthorized", :unauthorized)
   end
 
   def render_forbidden
-    render json: { errors: [ "Forbidden" ] }, status: :forbidden
+    render_error("Forbidden", :forbidden)
+  end
+
+  def render_error(message, status)
+    render json: { errors: [ message ] }, status: status
   end
 end
