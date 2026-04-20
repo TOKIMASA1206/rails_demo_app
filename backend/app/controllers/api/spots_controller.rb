@@ -2,7 +2,8 @@ module Api
   class SpotsController < ApplicationController
     before_action :validate_sort_param, only: [ :index ]
     before_action :find_spot, only: [ :show, :update, :destroy ]
-    before_action :authenticate_user!, only: [ :create ]
+    before_action :authenticate_user!, only: [ :create, :update, :destroy ]
+    before_action :authorize_spot_owner!, only: [ :update, :destroy ]
 
     def index
       render json: spots_for_index.map { |spot| spot_response(spot) }, status: :ok
@@ -57,6 +58,13 @@ module Api
 
     def find_spot
       @spot = Spot.find_by(id: params[:id])
+    end
+
+    def authorize_spot_owner!
+      return if @spot.nil?
+      return if @spot.user == current_user
+
+      render_forbidden
     end
 
     def validate_sort_param
