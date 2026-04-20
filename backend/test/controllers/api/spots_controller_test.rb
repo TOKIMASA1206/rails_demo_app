@@ -114,7 +114,6 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       post "/api/spots",
         params: {
           spot: {
-            user_id: users(:one).id,
             category_id: categories(:one).id,
             name: "Local Sento",
             note: "Open late",
@@ -123,6 +122,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
             visited_on: "2026-04-09"
           }
         },
+        headers: auth_headers(users(:one)),
         as: :json
     end
 
@@ -229,6 +229,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
             status: "want_to_go"
           }
         },
+        headers: auth_headers(users(:one)),
         as: :json
     end
 
@@ -237,7 +238,6 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_includes response_json["errors"], "Name can't be blank"
-    assert_includes response_json["errors"], "User must exist"
   end
 
   test "returns errors when spot status is unsupported" do
@@ -245,12 +245,12 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       post "/api/spots",
         params: {
           spot: {
-            user_id: users(:one).id,
             category_id: categories(:one).id,
             name: "Test Spot",
             status: "archived"
           }
         },
+        headers: auth_headers(users(:one)),
         as: :json
     end
 
@@ -266,12 +266,12 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       post "/api/spots",
         params: {
           spot: {
-            user_id: users(:one).id,
             category_id: -1,
             name: "Ghost Spot",
             status: "want_to_go"
           }
         },
+        headers: auth_headers(users(:one)),
         as: :json
     end
 
@@ -282,28 +282,28 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response_json["errors"], "Category must exist"
   end
 
-  test "returns errors when user does not exist" do
+  test "returns unauthorized when user does not exist" do
     assert_no_difference("Spot.count") do
       post "/api/spots",
         params: {
           spot: {
-            user_id: -1,
             category_id: categories(:one).id,
             name: "Ghost Spot",
             status: "want_to_go"
           }
         },
+        headers: { "X-User-Id" => "-1" },
         as: :json
     end
 
-    assert_response :unprocessable_entity
+    assert_response :unauthorized
 
     response_json = JSON.parse(response.body)
 
-    assert_includes response_json["errors"], "User must exist"
+    assert_equal [ "Unauthorized" ], response_json["errors"]
   end
 
-  test "returns errors when user_id is missing" do
+  test "returns unauthorized when user header is missing" do
     assert_no_difference("Spot.count") do
       post "/api/spots",
         params: {
@@ -316,10 +316,39 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
         as: :json
     end
 
-    assert_response :unprocessable_entity
+    assert_response :unauthorized
 
     response_json = JSON.parse(response.body)
 
-    assert_includes response_json["errors"], "User must exist"
+    assert_equal [ "Unauthorized" ], response_json["errors"]
+  end
+
+  test "uses current_user instead of request user_id" do
+    assert_difference("Spot.count", 1) do
+      post "/api/spots",
+        params: {
+          spot: {
+            user_id: users(:two).id,
+            category_id: categories(:one).id,
+            name: "Header Owned Spot",
+            status: "want_to_go"
+          }
+        },
+        headers: auth_headers(users(:one)),
+        as: :json
+    end
+
+    assert_response :created
+
+    response_json = JSON.parse(response.body)
+
+    assert_equal users(:one).id, response_json["user_id"]
+    assert_equal users(:one).id, Spot.find(response_json["id"]).user_id
+  end
+
+  private
+
+  def auth_headers(user)
+    { "X-User-Id" => user.id.to_s }
   end
 end
