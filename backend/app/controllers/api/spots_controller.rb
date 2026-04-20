@@ -66,13 +66,14 @@ module Api
     end
 
     def spot_params
-      params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on)
+      params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on, :user_id)
     end
 
     def spot_response(spot)
       spot.as_json(only: %i[
         id
         category_id
+        user_id
         name
         note
         url
