@@ -10,6 +10,7 @@ class Spot < ApplicationRecord
   }, validate: true
 
   belongs_to :category
+  belongs_to :user
 
   validates :name, presence: true
   validates :status, presence: true
