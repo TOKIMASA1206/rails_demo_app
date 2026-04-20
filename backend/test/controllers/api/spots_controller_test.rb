@@ -4,6 +4,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
   SPOT_RESPONSE_KEYS = %w[
     id
     category_id
+    user_id
     name
     note
     url
@@ -49,11 +50,13 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
   test "sorts spots by name in ascending order" do
     spot_c = Spot.create!(
+      user: users(:one),
       category: categories(:one),
       name: "Zebra Cafe",
       status: "want_to_go"
     )
     spot_a = Spot.create!(
+      user: users(:one),
       category: categories(:one),
       name: "Apple Cafe",
       status: "want_to_go"
@@ -71,6 +74,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
   test "sorts spots by created_at in descending order" do
     older_spot = Spot.create!(
+      user: users(:one),
       category: categories(:one),
       name: "Older Cafe",
       status: "want_to_go",
@@ -78,6 +82,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       updated_at: 2.days.ago
     )
     newer_spot = Spot.create!(
+      user: users(:one),
       category: categories(:one),
       name: "Newer Cafe",
       status: "want_to_go",
@@ -109,6 +114,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       post "/api/spots",
         params: {
           spot: {
+            user_id: users(:one).id,
             category_id: categories(:one).id,
             name: "Local Sento",
             note: "Open late",
@@ -127,6 +133,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Local Sento", response_json["name"]
     assert_equal "want_to_go", response_json["status"]
     assert_equal categories(:one).id, response_json["category_id"]
+    assert_equal users(:one).id, response_json["user_id"]
     assert_equal SPOT_RESPONSE_KEYS.sort, response_json.keys.sort
   end
 
@@ -140,6 +147,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     assert_equal spots(:one).id, response_json["id"]
     assert_equal spots(:one).name, response_json["name"]
     assert_equal spots(:one).status, response_json["status"]
+    assert_equal spots(:one).user_id, response_json["user_id"]
     assert_equal SPOT_RESPONSE_KEYS.sort, response_json.keys.sort
   end
 
@@ -169,6 +177,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "Updated Cafe", response_json["name"]
     assert_equal "visited", response_json["status"]
+    assert_equal spots(:one).user_id, response_json["user_id"]
     assert_equal SPOT_RESPONSE_KEYS.sort, response_json.keys.sort
     assert_equal "Updated Cafe", spots(:one).reload.name
     assert_equal "visited", spots(:one).reload.status
@@ -228,6 +237,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_includes response_json["errors"], "Name can't be blank"
+    assert_includes response_json["errors"], "User must exist"
   end
 
   test "returns errors when spot status is unsupported" do
@@ -235,6 +245,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       post "/api/spots",
         params: {
           spot: {
+            user_id: users(:one).id,
             category_id: categories(:one).id,
             name: "Test Spot",
             status: "archived"
@@ -255,6 +266,7 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
       post "/api/spots",
         params: {
           spot: {
+            user_id: users(:one).id,
             category_id: -1,
             name: "Ghost Spot",
             status: "want_to_go"
@@ -268,5 +280,46 @@ class Api::SpotsControllerTest < ActionDispatch::IntegrationTest
     response_json = JSON.parse(response.body)
 
     assert_includes response_json["errors"], "Category must exist"
+  end
+
+  test "returns errors when user does not exist" do
+    assert_no_difference("Spot.count") do
+      post "/api/spots",
+        params: {
+          spot: {
+            user_id: -1,
+            category_id: categories(:one).id,
+            name: "Ghost Spot",
+            status: "want_to_go"
+          }
+        },
+        as: :json
+    end
+
+    assert_response :unprocessable_entity
+
+    response_json = JSON.parse(response.body)
+
+    assert_includes response_json["errors"], "User must exist"
+  end
+
+  test "returns errors when user_id is missing" do
+    assert_no_difference("Spot.count") do
+      post "/api/spots",
+        params: {
+          spot: {
+            category_id: categories(:one).id,
+            name: "No Owner Spot",
+            status: "want_to_go"
+          }
+        },
+        as: :json
+    end
+
+    assert_response :unprocessable_entity
+
+    response_json = JSON.parse(response.body)
+
+    assert_includes response_json["errors"], "User must exist"
   end
 end

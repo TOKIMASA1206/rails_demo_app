@@ -1,6 +1,7 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
+  user: one
   category: one
   name: Morning Cafe
   note: Quiet place for breakfast
@@ -9,6 +10,7 @@ one:
   visited_on: 2026-04-08
 
 two:
+  user: two
   category: two
   name: Weekend Bookstore
   note: Nice indie bookstore

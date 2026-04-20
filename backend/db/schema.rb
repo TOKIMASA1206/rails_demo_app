@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_030757) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_022731) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,11 +29,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_030757) do
     t.string "status", default: "want_to_go", null: false
     t.datetime "updated_at", null: false
     t.string "url"
+    t.bigint "user_id", null: false
     t.date "visited_on"
     t.index ["category_id"], name: "index_spots_on_category_id"
     t.index ["status"], name: "index_spots_on_status"
+    t.index ["user_id"], name: "index_spots_on_user_id"
     t.check_constraint "status::text = ANY (ARRAY['want_to_go'::character varying, 'visited'::character varying]::text[])", name: "spots_status_check"
   end
 
+  create_table "users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
   add_foreign_key "spots", "categories"
+  add_foreign_key "spots", "users"
 end
