@@ -11,6 +11,8 @@ class Spot < ApplicationRecord
 
   belongs_to :category
   belongs_to :user
+  has_many :spot_tags, dependent: :destroy
+  has_many :tags, through: :spot_tags
 
   validates :name, presence: true
   validates :status, presence: true
