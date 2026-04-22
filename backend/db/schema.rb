@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_022731) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_21_061757) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_022731) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_categories_on_name", unique: true
+  end
+
+  create_table "spot_tags", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "spot_id", null: false
+    t.bigint "tag_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["spot_id", "tag_id"], name: "index_spot_tags_on_spot_id_and_tag_id", unique: true
+    t.index ["spot_id"], name: "index_spot_tags_on_spot_id"
+    t.index ["tag_id"], name: "index_spot_tags_on_tag_id"
   end
 
   create_table "spots", force: :cascade do |t|
@@ -37,12 +47,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_022731) do
     t.check_constraint "status::text = ANY (ARRAY['want_to_go'::character varying, 'visited'::character varying]::text[])", name: "spots_status_check"
   end
 
+  create_table "tags", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "spot_tags", "spots"
+  add_foreign_key "spot_tags", "tags"
   add_foreign_key "spots", "categories"
   add_foreign_key "spots", "users"
 end
