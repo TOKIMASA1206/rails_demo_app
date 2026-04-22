@@ -50,10 +50,10 @@ module Api
 
     def spots_for_index
       spots = Spot.all
-      spots = spots.where(category_id: params[:category_id]) if params[:category_id].present?
+      spots = spots.in_category(params[:category_id]) if params[:category_id].present?
+      spots = spots.sorted_by(params[:sort]) if params[:sort].present?
 
-      sort_order = Spot.sort_order_for(params[:sort])
-      sort_order ? spots.order(sort_order) : spots
+      spots
     end
 
     def find_spot
@@ -69,7 +69,7 @@ module Api
 
     def validate_sort_param
       return unless params[:sort].present?
-      return if Spot.sort_order_for(params[:sort])
+      return if Spot.valid_sort?(params[:sort])
 
       render_bad_request("Invalid sort parameter")
     end

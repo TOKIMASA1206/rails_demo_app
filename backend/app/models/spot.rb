@@ -17,7 +17,10 @@ class Spot < ApplicationRecord
   validates :name, presence: true
   validates :status, presence: true
 
-  def self.sort_order_for(sort)
-    SORT_ORDERS[sort]
+  scope :in_category, ->(category_id) { where(category_id: category_id) }
+  scope :sorted_by, ->(sort) { order(SORT_ORDERS.fetch(sort)) }
+
+  def self.valid_sort?(sort)
+    SORT_ORDERS.key?(sort)
   end
 end

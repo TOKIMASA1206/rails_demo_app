@@ -46,4 +46,33 @@ class SpotTest < ActiveSupport::TestCase
 
     assert_includes spot.tags, tags(:one)
   end
+
+  test "in_category returns spots for the category" do
+    assert_equal [ spots(:one) ], Spot.in_category(categories(:one).id)
+  end
+
+  test "sorted_by applies the requested sort order" do
+    spot_c = Spot.create!(
+      user: users(:one),
+      category: categories(:one),
+      name: "Zebra Cafe",
+      status: "want_to_go"
+    )
+    spot_a = Spot.create!(
+      user: users(:one),
+      category: categories(:one),
+      name: "Apple Cafe",
+      status: "want_to_go"
+    )
+
+    assert_equal [ spot_a, spots(:one), spots(:two), spot_c ], Spot.sorted_by("name_asc")
+  end
+
+  test "valid_sort returns true for supported sort values" do
+    assert Spot.valid_sort?("name_asc")
+  end
+
+  test "valid_sort returns false for unsupported sort values" do
+    assert_not Spot.valid_sort?("name_desc")
+  end
 end
