@@ -49,11 +49,10 @@ module Api
     private
 
     def spots_for_index
-      spots = Spot.all
-      spots = spots.in_category(params[:category_id]) if params[:category_id].present?
-      spots = spots.sorted_by(params[:sort]) if params[:sort].present?
-
-      spots
+      Spots::IndexQuery.new(
+        category_id: params[:category_id],
+        sort: params[:sort]
+      ).call
     end
 
     def find_spot
