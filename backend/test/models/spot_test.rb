@@ -40,4 +40,10 @@ class SpotTest < ActiveSupport::TestCase
 
     assert spot.valid?
   end
+
+  test "has many tags through spot tags" do
+    spot = spots(:one)
+
+    assert_includes spot.tags, tags(:one)
+  end
 end
