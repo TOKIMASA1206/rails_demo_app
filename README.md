@@ -126,6 +126,14 @@ docker compose exec frontend npm run lint
 docker compose exec frontend npm run build
 ```
 
+Rails API との疎通を確認したいとき:
+
+```bash
+curl http://localhost:3000/api/spots
+```
+
+frontend 画面に `Loaded spots: N` が表示されれば、Next.js から Rails API を取得できています。
+
 ---
 
 # CI
