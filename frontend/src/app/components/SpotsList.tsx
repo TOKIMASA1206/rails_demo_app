@@ -9,6 +9,15 @@ type FetchState =
   | { status: "success"; spots: Spot[] }
   | { status: "error"; message: string };
 
+type SpotsListMessageProps = {
+  tone?: "default" | "error";
+  children: React.ReactNode;
+};
+
+type SpotListItemProps = {
+  spot: Spot;
+};
+
 function formatSpotStatus(status: Spot["status"]) {
   switch (status) {
     case "want_to_go":
@@ -16,6 +25,64 @@ function formatSpotStatus(status: Spot["status"]) {
     case "visited":
       return "訪問済み";
   }
+}
+
+function SpotsListMessage({ tone = "default", children }: SpotsListMessageProps) {
+  const isError = tone === "error";
+
+  return (
+    <section
+      className={`rounded-lg border p-5 shadow-sm ${
+        isError ? "border-red-200 bg-red-50" : "border-zinc-200 bg-white"
+      }`}
+    >
+      <h2
+        className={`text-xl font-semibold ${
+          isError ? "text-red-900" : "text-zinc-900"
+        }`}
+      >
+        保存したスポット
+      </h2>
+      <p className={`mt-3 text-sm ${isError ? "text-red-700" : "text-zinc-600"}`}>
+        {children}
+      </p>
+    </section>
+  );
+}
+
+function SpotListItem({ spot }: SpotListItemProps) {
+  return (
+    <li className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-medium text-zinc-900">{spot.name}</h3>
+          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
+            {formatSpotStatus(spot.status)}
+          </span>
+        </div>
+
+        <p className="text-sm text-zinc-500">Category ID: {spot.category_id}</p>
+        <p className="text-sm text-zinc-500">Name: {spot.name}</p>
+      </div>
+    </li>
+  );
+}
+
+function SpotsListContent({ spots }: { spots: Spot[] }) {
+  return (
+    <section className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
+        <p className="text-sm text-zinc-600">{spots.length} spots</p>
+      </div>
+
+      <ul className="space-y-3">
+        {spots.map((spot) => (
+          <SpotListItem key={spot.id} spot={spot} />
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 export function SpotsList() {
@@ -60,73 +127,29 @@ export function SpotsList() {
 
   if (!apiBaseUrl) {
     return (
-      <section className="rounded-lg border border-red-200 bg-red-50 p-5 shadow-sm">
-        <h2 className="text-xl font-semibold text-red-900">保存したスポット</h2>
-        <p className="mt-3 text-sm text-red-700">
-          API error: NEXT_PUBLIC_API_BASE_URL is not set
-        </p>
-      </section>
+      <SpotsListMessage tone="error">
+        API error: NEXT_PUBLIC_API_BASE_URL is not set
+      </SpotsListMessage>
     );
   }
 
   if (state.status === "loading") {
-    return (
-      <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
-        <p className="mt-3 text-sm text-zinc-600">スポットを読み込み中です...</p>
-      </section>
-    );
+    return <SpotsListMessage>スポットを読み込み中です...</SpotsListMessage>;
   }
 
   if (state.status === "error") {
     return (
-      <section className="rounded-lg border border-red-200 bg-red-50 p-5 shadow-sm">
-        <h2 className="text-xl font-semibold text-red-900">保存したスポット</h2>
-        <p className="mt-3 text-sm text-red-700">
-          スポットの取得に失敗しました: {state.message}
-        </p>
-      </section>
+      <SpotsListMessage tone="error">
+        スポットの取得に失敗しました: {state.message}
+      </SpotsListMessage>
     );
   }
 
   if (state.spots.length === 0) {
     return (
-      <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          行きたい場所をまだ保存していません。
-        </p>
-      </section>
+      <SpotsListMessage>行きたい場所をまだ保存していません。</SpotsListMessage>
     );
   }
 
-  return (
-    <section className="space-y-4">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
-        <p className="text-sm text-zinc-600">{state.spots.length} spots</p>
-      </div>
-
-      <ul className="space-y-3">
-        {state.spots.map((spot) => (
-          <li
-            key={spot.id}
-            className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm"
-          >
-            <div className="space-y-2">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-lg font-medium text-zinc-900">{spot.name}</h3>
-                <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                  {formatSpotStatus(spot.status)}
-                </span>
-              </div>
-
-              <p className="text-sm text-zinc-500">Category ID: {spot.category_id}</p>
-              <p className="text-sm text-zinc-500">Name: {spot.name}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
+  return <SpotsListContent spots={state.spots} />;
 }
