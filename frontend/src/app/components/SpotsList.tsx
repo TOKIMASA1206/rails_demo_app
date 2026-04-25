@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 import type { Spot } from "@/types/spot";
 
+import { SpotCreateForm } from "./SpotCreateForm";
+
 type FetchState =
   | { status: "loading" }
   | { status: "success"; spots: Spot[] }
@@ -16,6 +18,11 @@ type SpotsListMessageProps = {
 
 type SpotListItemProps = {
   spot: Spot;
+};
+
+type SpotsListContentProps = {
+  spots: Spot[];
+  onSpotCreated: (spot: Spot) => void;
 };
 
 function formatSpotStatus(status: Spot["status"]) {
@@ -68,19 +75,27 @@ function SpotListItem({ spot }: SpotListItemProps) {
   );
 }
 
-function SpotsListContent({ spots }: { spots: Spot[] }) {
+function SpotsListContent({ spots, onSpotCreated }: SpotsListContentProps) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
+      <SpotCreateForm onCreated={onSpotCreated} />
+
       <div className="space-y-1">
         <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
         <p className="text-sm text-zinc-600">{spots.length} spots</p>
       </div>
 
-      <ul className="space-y-3">
-        {spots.map((spot) => (
-          <SpotListItem key={spot.id} spot={spot} />
-        ))}
-      </ul>
+      {spots.length === 0 ? (
+        <div className="rounded-lg border border-zinc-200 bg-white p-5 text-sm text-zinc-600 shadow-sm">
+          行きたい場所をまだ保存していません。
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {spots.map((spot) => (
+            <SpotListItem key={spot.id} spot={spot} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -125,6 +140,19 @@ export function SpotsList() {
     };
   }, [apiBaseUrl]);
 
+  const handleSpotCreated = (spot: Spot) => {
+    setState((currentState) => {
+      if (currentState.status !== "success") {
+        return currentState;
+      }
+
+      return {
+        status: "success",
+        spots: [spot, ...currentState.spots],
+      };
+    });
+  };
+
   if (!apiBaseUrl) {
     return (
       <SpotsListMessage tone="error">
@@ -145,11 +173,10 @@ export function SpotsList() {
     );
   }
 
-  if (state.spots.length === 0) {
-    return (
-      <SpotsListMessage>行きたい場所をまだ保存していません。</SpotsListMessage>
-    );
-  }
-
-  return <SpotsListContent spots={state.spots} />;
+  return (
+    <SpotsListContent
+      spots={state.spots}
+      onSpotCreated={handleSpotCreated}
+    />
+  );
 }
