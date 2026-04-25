@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 
+import type { Category } from "@/types/category";
 import type { Spot, SpotFormValues } from "@/types/spot";
 
 type SpotCreateFormProps = {
+  categories: Category[];
   onCreated: (spot: Spot) => void;
 };
 
@@ -18,8 +20,11 @@ const initialValues: SpotFormValues = {
   status: "want_to_go",
 };
 
-export function SpotCreateForm({ onCreated }: SpotCreateFormProps) {
-  const [values, setValues] = useState<SpotFormValues>(initialValues);
+export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
+  const [values, setValues] = useState<SpotFormValues>(() => ({
+    ...initialValues,
+    category_id: categories[0]?.id.toString() ?? initialValues.category_id,
+  }));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,7 +77,10 @@ export function SpotCreateForm({ onCreated }: SpotCreateFormProps) {
       }
 
       onCreated(data as Spot);
-      setValues(initialValues);
+      setValues({
+        ...initialValues,
+        category_id: categories[0]?.id.toString() ?? initialValues.category_id,
+      });
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -170,18 +178,27 @@ export function SpotCreateForm({ onCreated }: SpotCreateFormProps) {
                 htmlFor="spot-category-id"
                 className="block text-sm font-medium text-zinc-700"
               >
-                Category ID
+                カテゴリー
               </label>
-              <input
+              <select
                 id="spot-category-id"
-                type="number"
-                min="1"
+                disabled={categories.length === 0}
                 value={values.category_id}
                 onChange={(event) =>
                   updateValue("category_id", event.target.value)
                 }
-                className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200"
-              />
+                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:bg-zinc-100"
+              >
+                {categories.length === 0 ? (
+                  <option value="">カテゴリーがありません</option>
+                ) : (
+                  categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           </div>
         </div>

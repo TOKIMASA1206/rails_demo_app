@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 
+import type { Category } from "@/types/category";
 import type { Spot } from "@/types/spot";
 
 import { SpotCreateForm } from "./SpotCreateForm";
 
 type FetchState =
   | { status: "loading" }
-  | { status: "success"; spots: Spot[] }
+  | { status: "success"; categories: Category[]; spots: Spot[] }
   | { status: "error"; message: string };
 
 type SpotsListMessageProps = {
@@ -17,10 +18,12 @@ type SpotsListMessageProps = {
 };
 
 type SpotListItemProps = {
+  categories: Category[];
   spot: Spot;
 };
 
 type SpotsListContentProps = {
+  categories: Category[];
   spots: Spot[];
   onSpotCreated: (spot: Spot) => void;
 };
@@ -32,6 +35,10 @@ function formatSpotStatus(status: Spot["status"]) {
     case "visited":
       return "訪問済み";
   }
+}
+
+function findCategoryName(categories: Category[], categoryId: number) {
+  return categories.find((category) => category.id === categoryId)?.name;
 }
 
 function SpotsListMessage({ tone = "default", children }: SpotsListMessageProps) {
@@ -57,7 +64,9 @@ function SpotsListMessage({ tone = "default", children }: SpotsListMessageProps)
   );
 }
 
-function SpotListItem({ spot }: SpotListItemProps) {
+function SpotListItem({ categories, spot }: SpotListItemProps) {
+  const categoryName = findCategoryName(categories, spot.category_id);
+
   return (
     <li className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
       <div className="space-y-2">
@@ -68,17 +77,37 @@ function SpotListItem({ spot }: SpotListItemProps) {
           </span>
         </div>
 
-        <p className="text-sm text-zinc-500">Category ID: {spot.category_id}</p>
-        <p className="text-sm text-zinc-500">Name: {spot.name}</p>
+        <p className="text-sm text-zinc-500">
+          カテゴリー: {categoryName ?? `ID ${spot.category_id}`}
+        </p>
+
+        {spot.note && (
+          <p className="text-sm text-zinc-600">メモ: {spot.note}</p>
+        )}
+
+        {spot.url && (
+          <a
+            href={spot.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block text-sm font-medium text-zinc-700 underline underline-offset-2"
+          >
+            URLを見る
+          </a>
+        )}
       </div>
     </li>
   );
 }
 
-function SpotsListContent({ spots, onSpotCreated }: SpotsListContentProps) {
+function SpotsListContent({
+  categories,
+  spots,
+  onSpotCreated,
+}: SpotsListContentProps) {
   return (
     <section className="space-y-6">
-      <SpotCreateForm onCreated={onSpotCreated} />
+      <SpotCreateForm categories={categories} onCreated={onSpotCreated} />
 
       <div className="space-y-1">
         <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
@@ -92,7 +121,7 @@ function SpotsListContent({ spots, onSpotCreated }: SpotsListContentProps) {
       ) : (
         <ul className="space-y-3">
           {spots.map((spot) => (
-            <SpotListItem key={spot.id} spot={spot} />
+            <SpotListItem key={spot.id} categories={categories} spot={spot} />
           ))}
         </ul>
       )}
@@ -111,16 +140,24 @@ export function SpotsList() {
 
     const fetchSpots = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/spots`);
+        const [spotsResponse, categoriesResponse] = await Promise.all([
+          fetch(`${apiBaseUrl}/api/spots`),
+          fetch(`${apiBaseUrl}/api/categories`),
+        ]);
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        if (!spotsResponse.ok) {
+          throw new Error(`Spots HTTP ${spotsResponse.status}`);
         }
 
-        const spots: Spot[] = await response.json();
+        if (!categoriesResponse.ok) {
+          throw new Error(`Categories HTTP ${categoriesResponse.status}`);
+        }
+
+        const spots: Spot[] = await spotsResponse.json();
+        const categories: Category[] = await categoriesResponse.json();
 
         if (!ignore) {
-          setState({ status: "success", spots });
+          setState({ status: "success", categories, spots });
         }
       } catch (error) {
         if (!ignore) {
@@ -148,6 +185,7 @@ export function SpotsList() {
 
       return {
         status: "success",
+        categories: currentState.categories,
         spots: [spot, ...currentState.spots],
       };
     });
@@ -175,6 +213,7 @@ export function SpotsList() {
 
   return (
     <SpotsListContent
+      categories={state.categories}
       spots={state.spots}
       onSpotCreated={handleSpotCreated}
     />
