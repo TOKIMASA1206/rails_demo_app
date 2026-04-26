@@ -41,6 +41,21 @@ function findCategoryName(categories: Category[], categoryId: number) {
   return categories.find((category) => category.id === categoryId)?.name;
 }
 
+async function fetchCategories(apiBaseUrl: string) {
+  try {
+    const response = await fetch(`${apiBaseUrl}/api/categories`);
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const categories: Category[] = await response.json();
+    return categories;
+  } catch {
+    return [];
+  }
+}
+
 function SpotsListMessage({ tone = "default", children }: SpotsListMessageProps) {
   const isError = tone === "error";
 
@@ -140,21 +155,16 @@ export function SpotsList() {
 
     const fetchSpots = async () => {
       try {
-        const [spotsResponse, categoriesResponse] = await Promise.all([
+        const [spotsResponse, categories] = await Promise.all([
           fetch(`${apiBaseUrl}/api/spots`),
-          fetch(`${apiBaseUrl}/api/categories`),
+          fetchCategories(apiBaseUrl),
         ]);
 
         if (!spotsResponse.ok) {
           throw new Error(`Spots HTTP ${spotsResponse.status}`);
         }
 
-        if (!categoriesResponse.ok) {
-          throw new Error(`Categories HTTP ${categoriesResponse.status}`);
-        }
-
         const spots: Spot[] = await spotsResponse.json();
-        const categories: Category[] = await categoriesResponse.json();
 
         if (!ignore) {
           setState({ status: "success", categories, spots });

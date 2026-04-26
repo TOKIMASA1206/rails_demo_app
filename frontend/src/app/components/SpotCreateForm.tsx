@@ -13,7 +13,7 @@ type SpotCreateFormProps = {
 type CreateSpotResponse = Spot | { errors?: string[] };
 
 const initialValues: SpotFormValues = {
-  category_id: "1",
+  category_id: "",
   name: "",
   note: "",
   url: "",
@@ -27,6 +27,7 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
   }));
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasCategories = categories.length > 0;
 
   const updateValue = (field: keyof SpotFormValues, value: string) => {
     setValues((currentValues) => ({
@@ -39,6 +40,11 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
     event.preventDefault();
 
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+    if (!hasCategories || !values.category_id) {
+      setError("カテゴリーを選択してください");
+      return;
+    }
 
     if (!apiBaseUrl) {
       setError("NEXT_PUBLIC_API_BASE_URL is not set");
@@ -182,7 +188,7 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
               </label>
               <select
                 id="spot-category-id"
-                disabled={categories.length === 0}
+                disabled={!hasCategories}
                 value={values.category_id}
                 onChange={(event) =>
                   updateValue("category_id", event.target.value)
@@ -211,7 +217,7 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !hasCategories}
           className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:bg-zinc-400"
         >
           {isSubmitting ? "保存中..." : "保存する"}
