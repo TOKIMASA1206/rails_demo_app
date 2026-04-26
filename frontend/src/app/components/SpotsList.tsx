@@ -41,6 +41,19 @@ function findCategoryName(categories: Category[], categoryId: number) {
   return categories.find((category) => category.id === categoryId)?.name;
 }
 
+function safeHttpUrl(url: string | null) {
+  if (!url) return null;
+
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:"
+      ? parsedUrl.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchCategories(apiBaseUrl: string) {
   try {
     const response = await fetch(`${apiBaseUrl}/api/categories`);
@@ -81,6 +94,7 @@ function SpotsListMessage({ tone = "default", children }: SpotsListMessageProps)
 
 function SpotListItem({ categories, spot }: SpotListItemProps) {
   const categoryName = findCategoryName(categories, spot.category_id);
+  const safeUrl = safeHttpUrl(spot.url);
 
   return (
     <li className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
@@ -100,9 +114,9 @@ function SpotListItem({ categories, spot }: SpotListItemProps) {
           <p className="text-sm text-zinc-600">メモ: {spot.note}</p>
         )}
 
-        {spot.url && (
+        {safeUrl && (
           <a
-            href={spot.url}
+            href={safeUrl}
             target="_blank"
             rel="noreferrer"
             className="inline-block text-sm font-medium text-zinc-700 underline underline-offset-2"
