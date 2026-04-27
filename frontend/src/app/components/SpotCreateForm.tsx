@@ -7,6 +7,7 @@ import type { Spot, SpotFormValues } from "@/types/spot";
 
 type SpotCreateFormProps = {
   categories: Category[];
+  categoryError?: string;
   onCreated: (spot: Spot) => void;
 };
 
@@ -20,7 +21,11 @@ const initialValues: SpotFormValues = {
   status: "want_to_go",
 };
 
-export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
+export function SpotCreateForm({
+  categories,
+  categoryError,
+  onCreated,
+}: SpotCreateFormProps) {
   const [values, setValues] = useState<SpotFormValues>(() => ({
     ...initialValues,
     category_id: categories[0]?.id.toString() ?? initialValues.category_id,
@@ -40,6 +45,12 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
     event.preventDefault();
 
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+    const demoUserId = process.env.NEXT_PUBLIC_DEMO_USER_ID;
+
+    if (categoryError) {
+      setError("カテゴリーを取得できないため、スポットを作成できません");
+      return;
+    }
 
     if (!hasCategories || !values.category_id) {
       setError("カテゴリーを選択してください");
@@ -51,6 +62,11 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
       return;
     }
 
+    if (!demoUserId) {
+      setError("NEXT_PUBLIC_DEMO_USER_ID is not set");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -59,7 +75,7 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": "1",
+          "X-User-Id": demoUserId,
         },
         body: JSON.stringify({
           spot: {
@@ -188,14 +204,16 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
               </label>
               <select
                 id="spot-category-id"
-                disabled={!hasCategories}
+                disabled={!hasCategories || Boolean(categoryError)}
                 value={values.category_id}
                 onChange={(event) =>
                   updateValue("category_id", event.target.value)
                 }
                 className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:bg-zinc-100"
               >
-                {categories.length === 0 ? (
+                {categoryError ? (
+                  <option value="">カテゴリーを取得できません</option>
+                ) : categories.length === 0 ? (
                   <option value="">カテゴリーがありません</option>
                 ) : (
                   categories.map((category) => (
@@ -205,6 +223,11 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
                   ))
                 )}
               </select>
+              {categoryError && (
+                <p className="mt-1 text-sm text-red-700">
+                  カテゴリーの取得に失敗しました: {categoryError}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -217,7 +240,7 @@ export function SpotCreateForm({ categories, onCreated }: SpotCreateFormProps) {
 
         <button
           type="submit"
-          disabled={isSubmitting || !hasCategories}
+          disabled={isSubmitting || !hasCategories || Boolean(categoryError)}
           className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:bg-zinc-400"
         >
           {isSubmitting ? "保存中..." : "保存する"}

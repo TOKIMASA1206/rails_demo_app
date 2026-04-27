@@ -9,7 +9,11 @@ import { SpotCreateForm } from "./SpotCreateForm";
 
 type FetchState =
   | { status: "loading" }
-  | { status: "success"; categories: Category[]; spots: Spot[] }
+  | { status: "success"; categoriesState: CategoriesState; spots: Spot[] }
+  | { status: "error"; message: string };
+
+type CategoriesState =
+  | { status: "success"; categories: Category[] }
   | { status: "error"; message: string };
 
 type SpotsListMessageProps = {
@@ -23,7 +27,7 @@ type SpotListItemProps = {
 };
 
 type SpotsListContentProps = {
-  categories: Category[];
+  categoriesState: CategoriesState;
   spots: Spot[];
   onSpotCreated: (spot: Spot) => void;
 };
@@ -54,18 +58,24 @@ function safeHttpUrl(url: string | null) {
   }
 }
 
-async function fetchCategories(apiBaseUrl: string) {
+async function fetchCategories(apiBaseUrl: string): Promise<CategoriesState> {
   try {
     const response = await fetch(`${apiBaseUrl}/api/categories`);
 
     if (!response.ok) {
-      return [];
+      return {
+        status: "error",
+        message: `Categories HTTP ${response.status}`,
+      };
     }
 
     const categories: Category[] = await response.json();
-    return categories;
-  } catch {
-    return [];
+    return { status: "success", categories };
+  } catch (error) {
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+    };
   }
 }
 
@@ -130,13 +140,22 @@ function SpotListItem({ categories, spot }: SpotListItemProps) {
 }
 
 function SpotsListContent({
-  categories,
+  categoriesState,
   spots,
   onSpotCreated,
 }: SpotsListContentProps) {
+  const categories =
+    categoriesState.status === "success" ? categoriesState.categories : [];
+
   return (
     <section className="space-y-6">
-      <SpotCreateForm categories={categories} onCreated={onSpotCreated} />
+      <SpotCreateForm
+        categories={categories}
+        categoryError={
+          categoriesState.status === "error" ? categoriesState.message : undefined
+        }
+        onCreated={onSpotCreated}
+      />
 
       <div className="space-y-1">
         <h2 className="text-xl font-semibold text-zinc-900">保存したスポット</h2>
@@ -169,7 +188,7 @@ export function SpotsList() {
 
     const fetchSpots = async () => {
       try {
-        const [spotsResponse, categories] = await Promise.all([
+        const [spotsResponse, categoriesState] = await Promise.all([
           fetch(`${apiBaseUrl}/api/spots`),
           fetchCategories(apiBaseUrl),
         ]);
@@ -181,7 +200,7 @@ export function SpotsList() {
         const spots: Spot[] = await spotsResponse.json();
 
         if (!ignore) {
-          setState({ status: "success", categories, spots });
+          setState({ status: "success", categoriesState, spots });
         }
       } catch (error) {
         if (!ignore) {
@@ -209,7 +228,7 @@ export function SpotsList() {
 
       return {
         status: "success",
-        categories: currentState.categories,
+        categoriesState: currentState.categoriesState,
         spots: [spot, ...currentState.spots],
       };
     });
@@ -237,7 +256,7 @@ export function SpotsList() {
 
   return (
     <SpotsListContent
-      categories={state.categories}
+      categoriesState={state.categoriesState}
       spots={state.spots}
       onSpotCreated={handleSpotCreated}
     />
