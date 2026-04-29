@@ -87,83 +87,41 @@ Do not introduce additional statuses unless explicitly needed.
 
 ---
 
-## 5. API Design Principles
-Use RESTful Rails routes.
+## 5. Guideline Loading Rules
+Always follow this `AGENTS.md`.
 
-Preferred route style:
-- GET /api/spots
-- GET /api/spots/:id
-- POST /api/spots
-- PATCH /api/spots/:id
-- DELETE /api/spots/:id
+Before implementing Rails API/backend changes, also read:
+- `docs/guidelines/api.md`
 
-Filtering should prefer query params when possible, for example:
-- GET /api/spots?category_id=1
+Before implementing Next.js/frontend changes, also read:
+- `docs/guidelines/frontend.md`
 
-General API rules:
-- use `namespace :api`
-- use `resources`
-- use strong parameters
-- return meaningful HTTP status codes
-- keep controllers thin
-- avoid custom non-RESTful routes unless clearly justified
+If a task touches both backend and frontend, read both guidelines.
+Do not load unrelated guideline files unless the task requires them.
 
 ---
 
-## 6. Validation and DB Rules
-Always think at both levels:
-- application-level validation
-- database-level constraints
+## 6. Backend Summary
+Rails API is responsible for data integrity and application rules.
 
-### Required validations
-Category:
-- name: presence
-
-Spot:
-- name: presence
-- status: presence
-- category: presence
-
-### Preferred DB constraints
-Use constraints in migrations where appropriate:
-- `null: false` for required fields
-- `default:` for natural defaults
-- foreign keys for associations
-
-Example principles:
-- `status` should default to `want_to_go`
-- `category_id` should be required
-- avoid relying only on model validation
+Use RESTful routes, strong parameters, meaningful HTTP status codes, model validations, and database constraints.
+For detailed API implementation rules, follow `docs/guidelines/api.md`.
 
 ---
 
-## 7. Controller Rules
-Controllers should stay thin.
+## 7. Frontend Summary
+Next.js is responsible for screens, routing, user experience, and Rails API calls.
 
-Controllers should mainly:
-- receive request params
-- call model/query logic
-- render JSON
-- return correct status codes
+Keep UI changes focused, handle loading / error / empty / success states, and avoid unnecessary Client Components.
+For detailed frontend implementation rules, follow `docs/guidelines/frontend.md`.
 
-Avoid putting large business logic directly in controllers.
-
-Use strong params in private methods, for example:
-
-```rb
-def spot_params
-  params.require(:spot).permit(:category_id, :name, :note, :url, :status, :visited_on)
-end
-```
-Do not use `permit!`.
-
-## Working rules
+## 8. Working Rules
 - Use Plan first for non-trivial tasks.
 - Keep changes minimal and focused.
 - One task = one focused PR.
 - Do not change unrelated files.
 
-## Git rules
+## 9. Git Rules
 - Branch naming:
   - feature/<issue-number>-short-description
   - fix/<issue-number>-short-description
@@ -177,11 +135,13 @@ Do not use `permit!`.
   - test: ...
   - chore: ...
 
-## Validation
+## 10. Validation
 - Backend: run test/lint before finishing
-- Frontend: run lint/typecheck before finishing if frontend exists
+- Frontend: run lint/build before finishing if frontend exists
+- If a validation command cannot be run, explain why in the summary.
 - Summarize changed files and why
 
-## Safety
+## 11. Safety
 - Do not edit secrets or production config unless explicitly asked.
-- Ask before changing schema, CI, or deployment files.
+- Do not change schema, CI, deployment, Docker, or environment files unless the task explicitly requires it.
+- If such changes are necessary, explain the reason and impact in the summary.
