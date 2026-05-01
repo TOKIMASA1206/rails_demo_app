@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Implementation Planner"
+  short_description: "Plan implementation from UI images"
+  default_prompt: "Use $ui-implementation-planner to turn this UI image into a Paper-based implementation plan and Issue breakdown."
