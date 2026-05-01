@@ -1,0 +1,4 @@
+interface:
+  display_name: "Next.js Frontend Implementation"
+  short_description: "Guide focused Next.js feature work"
+  default_prompt: "Use $nextjs-frontend-implementation to implement a focused Next.js frontend change in this repository."
