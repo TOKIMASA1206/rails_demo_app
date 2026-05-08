@@ -195,7 +195,7 @@ No production image assets are needed for this UI.
   - status が UI 上で判別でき、対象範囲に含める場合は card から更新できる。
   - loading / error / empty / success が dashboard layout 内で破綻しない。
   - desktop/mobile で text/button が重ならない。
-- Notes for Issue workflow: `github-issue-pr-workflow` で repo の Issue template に変換する。
+- Notes for Issue workflow: repo の `.github/ISSUE_TEMPLATE/task.md` に沿って GitHub Issue 化する。
 
 ### Sub-Issue brief 1
 
