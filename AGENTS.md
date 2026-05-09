@@ -102,18 +102,18 @@ Do not load unrelated guideline files unless the task requires them.
 ---
 
 ## 6. Backend Summary
-Rails API is responsible for data integrity and application rules.
+Rails API is responsible for data integrity, application rules, and API behavior.
 
-Use RESTful routes, strong parameters, meaningful HTTP status codes, model validations, and database constraints.
-For detailed API implementation rules, follow `docs/guidelines/api.md`.
+For Rails API/backend changes, follow `docs/guidelines/api.md`.
+Use this summary only as orientation; the guideline file is the source of truth for backend implementation details.
 
 ---
 
 ## 7. Frontend Summary
 Next.js is responsible for screens, routing, user experience, and Rails API calls.
 
-Keep UI changes focused, handle loading / error / empty / success states, and avoid unnecessary Client Components.
-For detailed frontend implementation rules, follow `docs/guidelines/frontend.md`.
+For Next.js/frontend changes, follow `docs/guidelines/frontend.md`.
+Use this summary only as orientation; the guideline file is the source of truth for frontend implementation details.
 
 ## 8. Working Rules
 - Use Plan first for non-trivial tasks.

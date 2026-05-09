@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rails Backend Implementation"
+  short_description: "Guide focused Rails API backend work"
+  default_prompt: "Use $rails-backend-implementation to implement a focused Rails API backend change in this repository."
